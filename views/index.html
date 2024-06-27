@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Legal Document OCR System</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+  <script async onerror="console.error('Failed to load opencv.js script!');" onload="onOpenCvReady();" src="https://docs.opencv.org/master/opencv.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+  <style>
+    canvas {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body class="container mt-5">
+  <div class="mb-4">
+    <input accept="image/*,application/pdf" class="form-control-file" id="inputImage" type="file" />
+    <button id="startOCR" class="form-control-file" hidden>Start OCR</button>
+  </div>
+  <div class="mt-4 mb-5" id="uploadLabel">Upload any PDF or image file to be scanned.</div>
+  <div class="alert alert-info mt-3" id="loadingIndicator" role="alert" style="display: none;">
+    Currently recognizing...
+    <div class="progress mt-2">
+      <div aria-valuemax="100" aria-valuemin="0" aria-valuenow="0" class="progress-bar" id="ocrProgress" role="progressbar" style="width: 0%;"></div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-4">
+      <canvas class="img-fluid" id="canvasOriginal"></canvas>
+    </div>
+    <div class="col-md-4">
+      <canvas class="img-fluid" id="canvasProcessed"></canvas>
+    </div>
+    <div class="col-md-4">
+      <canvas class="img-fluid" id="canvasRecognized"></canvas>
+    </div>
+  </div>
+  <h5 class="mt-3">STATISTICS:</h5>
+  <div id="accumulatedStats" class="mt-4 mb-5">Statistics will be displayed here.</div>
+  <button id="correctText" class="btn btn-primary">Correct Text</button>
+  <h5 class="mt-3">RAW TEXT:</h5>
+  <div class="mt-4 mb-2 border border-dark" id="rawText">The raw text from scanned document will be displayed here.</div>
+  <button onclick="copyToClipboard('rawText')" class="btn btn-secondary mb-4">Copy Raw Text</button>
+  <h5 class="mt-3">CORRECTED TEXT:</h5>
+  <div id="correctedText" class="mt-4 mb-2 border border-dark">Corrected text will be displayed here.</div>
+  <button onclick="copyToClipboard('correctedText')" class="btn btn-secondary">Copy Corrected Text</button>
+  
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+
+    function onOpenCvReady() {
+      $('#inputImage').prop('disabled', false);
+    }
+
+    document.getElementById('correctText').addEventListener('click', function() {
+      let rawText = document.getElementById('rawText').innerText;
+      sendTextToServer(rawText);
+    });
+
+    function sendTextToServer(rawText) {
+      $.ajax({
+        url: '/text-correction',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ text: rawText }),
+        success: function(response) {
+          document.getElementById('correctedText').innerText = response.correctedText;
+        },
+        error: function(error) {
+          console.error('Error sending text to server:', error);
+        }
+      });
+    }
+
+    function copyToClipboard(elementId) {
+      var copyText = document.getElementById(elementId).innerText;
+      var textArea = document.createElement("textarea");
+      textArea.value = copyText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("Copy");
+      textArea.remove();
+      alert("Copied to clipboard");
+    }
+
+    let totalProcessedPages = 0;
+    let totalAccuracy = 0;
+    let totalCorrectWords = 0;
+    let totalErrorWords = 0;
+    let totalWordsCount = 0;
+    let processedPages = 0;
+    let totalPageCount = 0;
+    let indonesianWords = new Set();
+
+    async function loadIndonesianWordList() {
+      try {
+        const response = await fetch('full_kbbi.txt');
+        const text = await response.text();
+        const words = text.split(/\r?\n/);
+        indonesianWords = new Set(words);
+        console.log("Word list loaded, total words: " + indonesianWords.size);
+      } catch (error) {
+        console.error("Error loading word list: ", error);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadIndonesianWordList();
+      $('#inputImage').on('change', function() {
+        document.getElementById('rawText').innerText = "The raw text from scanned document will be displayed here.";
+        $('#ocrProgress').css('width', '0%').attr('aria-valuenow', 0);
+        $('#loadingIndicator').hide();
+        let file = this.files[0];
+        if (file) {
+          $('#startOCR').prop('hidden', false);
+          if (file.type.match('image.*')) {
+            prepareImage(file);
+          } else if (file.type === 'application/pdf') {
+            preparePdf(file);
+          }
+        }
+      });
+    });
+
+    function prepareImage(file) {
+      totalPageCount = 1;
+      processedPages = 0;
+      let canvasOriginal = $('#canvasOriginal')[0];
+      let ctxOriginal = canvasOriginal.getContext('2d');
+      let imgOriginal = new Image();
+      imgOriginal.onload = function() {
+        canvasOriginal.width = imgOriginal.width;
+        canvasOriginal.height = imgOriginal.height;
+        ctxOriginal.drawImage(imgOriginal, 0, 0, imgOriginal.width, imgOriginal.height);
+      };
+      imgOriginal.src = URL.createObjectURL(file);
+    }
+
+    function loadImage(file) {
+      totalPageCount = 1;
+      processedPages = 0;
+      let canvasOriginal = $('#canvasOriginal')[0];
+      let ctxOriginal = canvasOriginal.getContext('2d');
+      let imgOriginal = new Image();
+      imgOriginal.onload = function() {
+        canvasOriginal.width = imgOriginal.width;
+        canvasOriginal.height = imgOriginal.height;
+        ctxOriginal.drawImage(imgOriginal, 0, 0, imgOriginal.width, imgOriginal.height);
+        processImage(canvasOriginal.toDataURL('image/png'));
+      };
+      imgOriginal.src = URL.createObjectURL(file);
+    }
+
+    function preparePdf(file) {
+      processedPages = 0;
+      let fileReader = new FileReader();
+      fileReader.onload = function() {
+        let typedarray = new Uint8Array(this.result);
+        pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+          totalPageCount = pdf.numPages;
+        });
+      };
+      fileReader.readAsArrayBuffer(file);
+    }
+
+    function loadPdf(file) {
+      processedPages = 0;
+      let fileReader = new FileReader();
+      fileReader.onload = function() {
+        let typedarray = new Uint8Array(this.result);
+        pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+          totalPageCount = pdf.numPages;
+          processPdfPage(pdf, 1);
+        });
+      };
+      fileReader.readAsArrayBuffer(file);
+    }
+
+    document.getElementById('startOCR').addEventListener('click', function() {
+      let file = $('#inputImage')[0].files[0];
+      if (file.type.match('image.*')) {
+        loadImage(file);
+      } else if (file.type === 'application/pdf') {
+        loadPdf(file);
+      }
+    });
+
+    function processPdfPage(pdfDocument, pageNum) {
+      pdfDocument.getPage(pageNum).then(page => {
+        let viewport = page.getViewport({ scale: 1 });
+        let scale = (window.innerWidth / viewport.width) * 0.95;
+        viewport = page.getViewport({ scale: scale });
+        let canvasOriginal = document.getElementById('canvasOriginal');
+        let ctxOriginal = canvasOriginal.getContext('2d');
+        let canvasProcessed = document.getElementById('canvasProcessed');
+        let ctxProcessed = canvasProcessed.getContext('2d');
+        canvasOriginal.height = viewport.height;
+        canvasOriginal.width = viewport.width;
+        canvasProcessed.height = viewport.height;
+        canvasProcessed.width = viewport.width;
+        page.render({ canvasContext: ctxOriginal, viewport: viewport }).promise.then(() => {
+          let imgOriginal = canvasOriginal.toDataURL('image/png');
+          let src = cv.imread(canvasOriginal);
+          let dst = new cv.Mat();
+          cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+          cv.threshold(dst, dst, 127, 255, cv.THRESH_BINARY);
+          cv.imshow('canvasProcessed', dst);
+          let imgProcessed = canvasOriginal.toDataURL();
+          performOCR(imgProcessed, totalPageCount, pageNum, pdfDocument, (result, pdfDoc) => {
+            handleRawText(result, pageNum, pdfDoc);
+            drawBBox(result.data.words, imgProcessed);
+          });
+        });
+      });
+    }
+
+    function processImage(dataUrl) {
+      let src = cv.imread('canvasOriginal');
+      let dst = new cv.Mat();
+      cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+      cv.threshold(dst, dst, 127, 255, cv.THRESH_BINARY);
+      cv.imshow('canvasProcessed', dst);
+      let imgProcessed = $('#canvasProcessed')[0].toDataURL();
+      performOCR(imgProcessed, 1, 1, null, (result, pdfDocument) => {
+        handleRawText(result, 1, pdfDocument);
+      });
+    }
+
+    function performOCR(imgProcessed, totalPages, pageNum, pdfDocument, callback) {
+      $('#loadingIndicator').show();
+      $('#loadingIndicator').removeClass('alert-danger').removeClass('alert-success').addClass('alert-info');
+      $('#loadingIndicator').contents().filter(function() {
+        return this.nodeType === 3;
+      }).remove();
+      $('#loadingIndicator').prepend('Currently recognizing...');
+      $('#ocrProgress').css('width', '0%').attr('aria-valuenow', 0);
+
+      Tesseract.recognize(imgProcessed, 'eng', {
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            let progressPercentage = Math.round(m.progress * 100);
+            $('#ocrProgress').css('width', progressPercentage + '%').attr('aria-valuenow', progressPercentage);
+          }
+        }
+      }).then(result => {
+        if (pageNum === 1 && pdfDocument === null) {
+          drawBBox(result.data.words, imgProcessed);
+        }
+        if (typeof callback === "function") {
+          callback(result, pdfDocument);
+        }
+      }).catch(error => {
+        console.error("Error during OCR processing:", error);
+        resetLoadingIndicator('Error in text recognition');
+        $('#loadingIndicator').addClass('alert-danger').removeClass('alert-info');
+      });
+    }
+
+    function handleRawText(result, pageNum, pdfDocument) {
+      let lines = result.data.text.split('\n');
+      let formattedText = `<p><h5 style="color: blue;">PAGE ${pageNum}</h5><br>`;
+      const prefixes = ["di", "ke", "se", "ter", "per", "me", "ber"];
+      const suffixes = ["kan", "i", "an", "nya", "pun"];
+
+      function isWordValid(word) {
+        function checkWordPart(part) {
+          let cleanPart = part.replace(/[.,\/#!$%\^&\*;:{}=\`~()]/g, "").replace(/^-+/, '').replace(/-+$/, '');
+          if (indonesianWords.has(cleanPart.toLowerCase())) {
+            return true;
+          }
+          if (cleanPart.includes('-')) {
+            let compoundParts = cleanPart.split('-');
+            return compoundParts.every(part => indonesianWords.has(part.toLowerCase()));
+          }
+          for (let prefix of prefixes) {
+            if (cleanPart.startsWith(prefix)) {
+              let withoutPrefix = cleanPart.substring(prefix.length);
+              if (indonesianWords.has(withoutPrefix.toLowerCase())) {
+                return true;
+              }
+              for (let suffix of suffixes) {
+                if (withoutPrefix.endsWith(suffix)) {
+                  let baseWord = withoutPrefix.substring(0, withoutPrefix.length - suffix.length);
+                  if (indonesianWords.has(baseWord.toLowerCase())) {
+                    return true;
+                  }
+                }
+              }
+            }
+          }
+          for (let suffix of suffixes) {
+            if (cleanPart.endsWith(suffix)) {
+              let withoutSuffix = cleanPart.substring(0, cleanPart.length - suffix.length);
+              if (indonesianWords.has(withoutSuffix.toLowerCase())) {
+                return true;
+              }
+            }
+          }
+          return false;
+        }
+        if (word.includes('/')) {
+          let parts = word.split('/');
+          return parts.every(part => checkWordPart(part));
+        }
+        return checkWordPart(word);
+      }
+
+      function calculateAccuracy(lines) {
+        let totalWords = 0;
+        let correctWords = 0;
+        lines.forEach(line => {
+          let words = line.split(/\s+/);
+          words.forEach(word => {
+            totalWords++;
+            if (/^\d+$/.test(word) || isWordValid(word)) {
+              correctWords++;
+            }
+          });
+        });
+        let accuracy = (correctWords / totalWords) * 100;
+        let errorWords = totalWords - correctWords;
+        return {
+          accuracy: accuracy,
+          correctWords: correctWords,
+          errorWords: errorWords,
+          totalWords: totalWords
+        };
+      }
+
+      lines.forEach(line => {
+        let words = line.split(/\s+/);
+        words.forEach(word => {
+          if (/^\d+$/.test(word) || isWordValid(word)) {
+            formattedText += `${word} `;
+          } else {
+            formattedText += `<span style="color: red;">${word}</span> `;
+          }
+        });
+        formattedText += '<br>';
+      });
+
+      let accuracyData = calculateAccuracy(lines);
+      formattedText += `
+        ==============================================<br>
+        Accuracy: ${accuracyData.accuracy.toFixed(2)}%<br>
+        Correct Words: ${accuracyData.correctWords}<br>
+        Error Words: ${accuracyData.errorWords}<br>
+        Total Words: ${accuracyData.totalWords}<br>
+        ==============================================<br></p>
+      `;
+      document.getElementById('rawText').innerHTML += formattedText;
+
+      if (pageNum < totalPageCount && pdfDocument) {
+        setTimeout(() => processPdfPage(pdfDocument, pageNum + 1), 0);
+      } else {
+        resetLoadingIndicator('Document recognized!');
+        $('#loadingIndicator').addClass('alert-success').removeClass('alert-info');
+      }
+
+      totalProcessedPages += 1;
+      totalAccuracy += accuracyData.accuracy;
+      totalCorrectWords += accuracyData.correctWords;
+      totalErrorWords += accuracyData.errorWords;
+      totalWordsCount += accuracyData.totalWords;
+
+      if (pageNum === totalPageCount) {
+        let averageAccuracy = totalAccuracy / totalProcessedPages;
+        document.getElementById('accumulatedStats').innerHTML = `
+          <p>Total Pages Processed: ${totalProcessedPages}</p>
+          <p>Average Accuracy: ${averageAccuracy.toFixed(2)}%</p>
+          <p>Total Correct Words: ${totalCorrectWords}</p>
+          <p>Total Error Words: ${totalErrorWords}</p>
+          <p>Total Words Count: ${totalWordsCount}</p>
+        `;
+        resetAccumulationVariables();
+      }
+    }
+
+    function resetAccumulationVariables() {
+      totalProcessedPages = 0;
+      totalAccuracy = 0;
+      totalCorrectWords = 0;
+      totalErrorWords = 0;
+      totalWordsCount = 0;
+    }
+
+    function resetLoadingIndicator(message) {
+      $('#loadingIndicator').contents().filter(function() {
+        return this.nodeType === 3;
+      }).remove();
+      $('#loadingIndicator').prepend(message);
+    }
+
+    function drawBBox(words, imgProcessed) {
+      let canvasRecognized = $('#canvasRecognized')[0];
+      let boxOutline = canvasRecognized.getContext('2d');
+      let imgRecognized = new Image();
+      imgRecognized.onload = function() {
+        canvasRecognized.width = imgRecognized.width;
+        canvasRecognized.height = imgRecognized.height;
+        boxOutline.drawImage(imgRecognized, 0, 0, imgRecognized.width, imgRecognized.height);
+        words.forEach(word => {
+          let bbox = word.bbox;
+          boxOutline.beginPath();
+          boxOutline.rect(bbox.x0, bbox.y0, bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
+          boxOutline.lineWidth = 2;
+          boxOutline.strokeStyle = 'red';
+          boxOutline.fillStyle = 'red';
+          boxOutline.stroke();
+          boxOutline.fillText(word.text, bbox.x0, bbox.y0 > 10 ? bbox.y0 - 5 : 10);
+        });
+      };
+      imgRecognized.src = imgProcessed;
+    }
+  </script>
+</body>
+</html>
