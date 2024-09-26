@@ -1,7 +1,7 @@
 # Flask Sistem Koreksi Teks
 
 ## Deskripsi
-**Sistem Koreksi Teks** adalah platform yang dirancang dengan menggunakan **Python Flask** untuk melakukan koreksi teks secara otomatis. Berdasarkan input teks yang diberikan oleh user, sistem akan mencoba memperbaiki kesalahan penulisan yang ada dalam teks. Aplikasi ini dapat digunakan untuk berbagai keperluan seperti proofreading, analisis teks, atau tugas _Natural Language Processing_ lainnya.
+**Sistem Koreksi Teks** adalah platform yang dirancang dengan menggunakan **Python Flask** untuk melakukan koreksi teks secara otomatis dengan mengintegrasikan model Machine Learning **IndoBERT**. Berdasarkan input teks yang diberikan oleh user, sistem akan mencoba memperbaiki kesalahan penulisan yang ada dalam teks. Aplikasi ini dapat digunakan untuk berbagai keperluan seperti proofreading, analisis teks, atau tugas _Natural Language Processing_ lainnya.
 
 ## Fitur
 - **Visual Feedback**: Setiap tahap proses akan ditampilkan indikator untuk meningkatkan User Experience.
