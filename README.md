@@ -28,7 +28,7 @@
 
 Clone project **Sistem Koreksi Teks**
 ```bash
-  git clone https://github.com/samdhila/flask-text-correction
+  git clone https://github.com/samdhila/flask-text-correction.git
 ```
 
 Buka CMD pada directory project
