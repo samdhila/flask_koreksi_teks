@@ -28,12 +28,12 @@
 
 Clone project **Sistem Koreksi Teks**
 ```bash
-  git clone https://github.com/samdhila/flask-text-correction.git
+  git clone https://github.com/samdhila/flask_text_correction.git
 ```
 
 Buka CMD pada directory project
 ```bash
-  cd flask-text-correction
+  cd flask_text_correction
 ```
 
 Buat virtual environment
