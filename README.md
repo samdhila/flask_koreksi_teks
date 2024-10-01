@@ -15,6 +15,8 @@
 - **Koreksi Otomatis**: Sistem lalu mengoreksi kesalahan dalam teks secara otomatis menggunakan model yang telah diintegrasikan.
 - **Output Text**: Sistem akan menampilkan versi teks yang sudah dikoreksi.
 
+![Demo Koreksi Teks GIF](https://github.com/samdhila/media/blob/main/demo_indobert.gif)
+
 ## Setup Project
 
 ### Pre-requirements
@@ -71,6 +73,6 @@ Upload file **dummy_text.txt** untuk melakukan demo **text correction**, atau co
   Gempa bvmi di Banda Aceh terjadi paoa sore hari kemarin
 ```
 
-## Demo
+## Live Demo
 
-Coming soon...
+**Link:** Coming soon...
