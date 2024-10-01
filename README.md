@@ -5,14 +5,15 @@
 
 ## Fitur
 - **Visual Feedback**: Setiap tahap proses akan ditampilkan indikator untuk meningkatkan User Experience.
-- **Error Highlight**: Teks yang dideteksi sebagai kesalahan akan ditandai dengan highlight warna merah untuk meningkatkan visual clarity.
+- **Text Highlight**: Teks yang dideteksi sebagai kesalahan akan ditandai dengan highlight warna merah, teks yang telah dikoreksi akan ditandai dengan highlight warna hijau untuk meningkatkan visual clarity.
 - **Parallel Scrolling**: Agar bisa lebih leluasa dan efisien untuk membandingkan input text dengan corrected text.
 - **Minimize Output Container**: Agar bisa menghemat space Web UI dan juga meningkatkan fokus.
 - **Copy-able Output Text**: Teks yang sudah dikoreksi bisa langsung di-copy untuk digunakan lebih lanjut.
 
 ## Alur Sistem
 - **User Input Text**: User dapat mengetik input text secara manual maupun dengan mengunggah file **.txt** yang akan dikoreksi.
-- **Koreksi Otomatis**: Sistem lalu mengoreksi kesalahan dalam teks secara otomatis menggunakan model yang telah diintegrasikan.
+- **Deteksi Kesalahan**: Sistem akan mendeteksi dan menandai kosakata yang salah berdasarkan isi kamus kosakata baku KBBI.
+- **Koreksi Kesalahan**: Sistem lalu mengoreksi teks yang dianggap salah secara otomatis menggunakan model yang telah diintegrasikan.
 - **Output Text**: Sistem akan menampilkan versi teks yang sudah dikoreksi.
 
 ![Demo Koreksi Teks GIF](https://github.com/samdhila/media/blob/main/demo_indobert.gif)
@@ -30,12 +31,12 @@
 
 Clone project **Sistem Koreksi Teks**
 ```bash
-  git clone https://github.com/samdhila/flask_text_correction.git
+  git clone https://github.com/samdhila/flask_koreksi_teks.git
 ```
 
 Buka CMD pada directory project
 ```bash
-  cd flask_text_correction
+  cd flask_koreksi_teks
 ```
 
 Buat virtual environment
@@ -45,7 +46,7 @@ Buat virtual environment
 
 Aktivasi virtual environment
 ```bash
-  source venv/bin/activate
+  venv\Scripts\activate
 ```
 
 Install requirements
@@ -56,6 +57,17 @@ Install requirements
 Install SpaCy model
 ```bash
   python -m spacy download en_core_web_sm
+```
+
+Pilih sumber **download** model **IndoBERT** yang ingin digunakan
+(berasal dari **HuggingFace (default)** atau **lokal**) pada **app.py**
+```bash
+# option 1 HuggingFace repository model
+model_path = 'indolem/indobert-base-uncased'
+```
+```bash
+# option 2 local repository model
+model_path = './saved_model'
 ```
 
 Jalankan aplikasi web Flask
