@@ -12,7 +12,7 @@
 
 ## Alur Sistem
 - **User Input Text**: User dapat mengetik input text secara manual maupun dengan mengunggah file **.txt** yang akan dikoreksi.
-- **Deteksi Kesalahan**: Sistem akan mendeteksi dan menandai kosakata yang salah berdasarkan isi kamus kosakata baku KBBI.
+- **Deteksi Kesalahan**: Sistem akan mendeteksi dan menandai kosakata yang salah berdasarkan kecocokan dengan isi kamus kosakata baku KBBI.
 - **Koreksi Kesalahan**: Sistem lalu mengoreksi teks yang dianggap salah secara otomatis menggunakan model yang telah diintegrasikan.
 - **Output Text**: Sistem akan menampilkan versi teks yang sudah dikoreksi.
 
