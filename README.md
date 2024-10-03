@@ -20,7 +20,7 @@
 - **Koreksi Kesalahan**: Sistem lalu mengoreksi teks yang dianggap salah secara otomatis menggunakan model yang telah diintegrasikan.
 - **Output Text**: Sistem akan menampilkan versi teks yang sudah dikoreksi.
 
-![Demo Koreksi Teks](https://github.com/samdhila/media/blob/main/demo_indobert.mp4)
+![Demo Koreksi Teks GIF](https://github.com/samdhila/media/blob/main/demo_koreksi.gif)
 
 ## Setup Project
 
