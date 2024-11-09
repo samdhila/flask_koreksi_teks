@@ -23,7 +23,7 @@
 ## Live Demo
 Untuk demo percobaan aplikasi **Flask Sistem Koreksi Teks**, bisa dilakukan pada
 [Coming soon...](#) ini.
-![Demo Koreksi Teks GIF](https://github.com/samdhila/media/blob/main/demo_koreksi.gif)
+![Demo Koreksi Teks GIF](https://github.com/samdhila/media/blob/main/bert/bert-optimized.gif)
 
 ## Setup Project
 
