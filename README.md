@@ -1,5 +1,16 @@
 # Flask Sistem Koreksi Teks
 
+# Table of Contents
+
+- [Flask Sistem Koreksi Teks](#flask-sistem-koreksi-teks)
+  - [Deskripsi Sistem](#deskripsi-sistem)
+  - [Detail Sistem](#detail-sistem)
+  - [Alur Sistem](#alur-sistem)
+  - [Live Demo](#live-demo)
+  - [Setup Project](#setup-project)
+    - [Pre-requirements](#pre-requirements)
+    - [Local Installation](#local-installation)
+
 ## Deskripsi Sistem
 **Sistem Koreksi Teks** adalah platform yang dirancang dengan menggunakan **Python Flask** untuk melakukan koreksi teks secara otomatis dengan mengintegrasikan model _Machine Learning_ **IndoBERT**. Berdasarkan input teks yang diberikan oleh user, sistem akan mencoba memperbaiki kesalahan penulisan yang ada dalam teks dan menampilkan kembali hasil perbaikan teks.
 
