@@ -32,8 +32,8 @@
 - **Output Text**: Sistem akan menampilkan output versi teks yang sudah dikoreksi.
 
 ## Live Demo
-Untuk demo percobaan aplikasi **Flask Sistem Koreksi Teks**, bisa dilakukan pada
-[Coming soon...](#) ini.
+Untuk demo percobaan aplikasi **Flask Sistem Koreksi Teks**, untuk saat ini belum bisa dilakukan.
+Berikut ilustrasi penggunaan aplikasi.
 ![Demo Koreksi Teks GIF](https://github.com/samdhila/media/blob/main/bert/bert-optimized.gif)
 
 ## Setup Project
