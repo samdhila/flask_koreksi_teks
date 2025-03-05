@@ -1,402 +1,545 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="viewport" content="width=device-width, initial-scale=1.0">
-    <meta charset="UTF-8">
-    <title>Koreksi Teks IndoBERT</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <style>
-        body {
-            background-color: #f0f8ff;
-        }
-        .container {
-            max-width: 600px;
-            margin-top: 50px;
-        }
-        .output {
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 5px;
-            position: relative;
-            padding-top: 40px; /* Adjust for navbar space */
-        }
-        .output-navbar {
-            background-color: rgba(128, 128, 128, 0.3); /* More transparent grey */
-            color: #6E6E6E;
-            padding: 3px;
-            font-size: 14px;
-            border-radius: 5px 5px 0 0;
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-left: 10px;
-            z-index: 1;
-        }
-        .output-content {
-            padding-top: 5px; /* Adjust for navbar space */
-            max-height: 400px; /* Limit to 20 lines, assuming 20px line-height */
-            overflow-y: auto;
-        }
-        #output-highlighted {
-            border: 2px solid #007acc;
-        }
-        #output-masked {
-            border: 2px solid #007acc;
-        }
-        #output-corrected {
-            border: 2px solid #007acc;
-            margin-bottom: 30px;
-        }
-        .highlight-error {
-            background-color: #ffe6e6; /* Light red */
-        }
-        .mask-error {
-            background-color: #ffffcc; /* Yellow */
-        }
-        .correct-error {
-            background-color: #e6ffe6; /* Light green */
-        }
-        .mask-highlight {
-            background-color: #ffeb99; /* Heavier yellow */
-            color: orange;
-        }
-        .correct-highlight {
-            background-color: #ccffcc; /* Heavier green */
-            color: green;
-        }
-        .spanred {
-            background-color: #ffcccc; /* Slightly darker red */
-            color: red;
-        }
-        .spanyellow {
-            background-color: #ffeb99; /* Heavier yellow */
-            color: orange;
-        }
-        .spangreen {
-            background-color: #ccffcc; /* Heavier green */
-            color: green;
-        }
-        /* Custom scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f0f8ff;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #007acc;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #005f99;
-        }
-        .stats-card {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            border: 2px dashed red;
-            background-color: white;
-            font-size: 14px;
-            width: 50%;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .upload-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .file-name {
-            margin-left: 10px;
-            font-size: 16px; /* Larger font size for better visibility */
-        }
-        .loading-icon, .checkmark-icon {
-            display: none;
-            margin-top: 10px;
-            text-align: center;
-        }
-        .loading-spinner {
-            width: 30px;
-            height: 30px;
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #007acc;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .canvas-container {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-        canvas {
-            border: 1px solid #007acc;
-            border-radius: 5px;
-            max-width: 180px; /* Adjust as needed */
-            max-height: 240px; /* Adjust as needed */
-        }
-        .icon-container {
-            text-align: center;
-            margin-top: 10px;
-        }
-        .error-message {
-            color: red;
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Text Correction - IndoBERT</title>
+
+  <!-- Bootstrap 5 -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+  />
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  />
+
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --success-color: #16a34a;
+      --warning-color: #ea580c;
+      --error-color: #dc2626;
+      --surface-color: #f8fafc;
+    }
+
+    body {
+      background-color: #f1f5f9;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    .container {
+      max-width: 800px;
+      padding: 2rem 1rem;
+    }
+
+    .main-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-section {
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: border-color 0.2s;
+    }
+    .input-section:hover {
+      border-color: var(--primary-color);
+    }
+
+    .output-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-top: 1.5rem;
+    }
+    .output-header {
+      background: var(--surface-color);
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .output-content {
+      padding: 1rem;
+      min-height: 80px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      border-left: 4px solid var(--primary-color);
+    }
+
+    /* Box-level highlight classes */
+    .highlight-error {
+      background-color: #fee2e2;
+    }
+    .mask-error {
+      background-color: #ffedd5;
+    }
+    .correct-error {
+      background-color: #dcfce7;
+    }
+
+    /* Per-word highlight classes (original highlighting) */
+    .spanred {
+      background-color: #ffcccc; 
+      color: red;
+      padding: 0 2px;
+      border-radius: 3px;
+    }
+    .spanyellow {
+      background-color: #ffeb99;
+      color: orange;
+      padding: 0 2px;
+      border-radius: 3px;
+    }
+    .spangreen {
+      background-color: #ccffcc;
+      color: green;
+      padding: 0 2px;
+      border-radius: 3px;
+    }
+
+    /* JS-Injected highlight classes */
+    .mask-highlight {
+      background-color: #ffeb99;
+      color: orange;
+      padding: 0 2px;
+      border-radius: 3px;
+    }
+    .correct-highlight {
+      background-color: #ccffcc;
+      color: green;
+      padding: 0 2px;
+      border-radius: 3px;
+    }
+
+    /* Loading spinner */
+    .loading-spinner {
+      width: 1.5rem;
+      height: 1.5rem;
+      border: 3px solid #e2e8f0;
+      border-top-color: var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Hide by default */
+    .icon-container,
+    #error-message-correction {
+      display: none;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    .icon-container img {
+      margin-bottom: 0.5rem;
+    }
+    .text-error {
+      color: var(--error-color);
+    }
+    .text-success {
+      color: var(--success-color);
+    }
+    .text-warning {
+      color: var(--warning-color);
+    }
+
+    /* Custom scrollbar styling (WebKit-based browsers) */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9; /* match the body background */
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #C1C1C1;
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #A8A8A8; /* slightly darker shade of primary */
+    }
+  </style>
 </head>
 <body>
-    <div class="container text-center">
-        <h1 class="text-primary mb-4">Koreksi Teks IndoBERT</h1>
-        <div class="upload-group">
-            <label for="file-upload" class="btn btn-secondary">Upload Text File</label>
-            <input id="file-upload" type="file" accept=".txt, .json" style="display: none;" onchange="handleFileUpload(event)">
-            <span id="file-name" class="file-name"></span>
-        </div>
-        <div class="form-group">
-            <textarea id="input" class="form-control" rows="1" style="resize: none; overflow-y: hidden;" placeholder="Enter your text here" oninput="adjustTextareaHeight(); checkInput()"></textarea>
-        </div>
-        <button id="correct-button" onclick="sendData()" class="btn btn-primary mb-2" disabled>Correct Text</button>
-        <div id="loading-icon-correction" class="loading-icon icon-container">
-            <div class="loading-spinner"></div>
-            <p>Correcting...</p>
-        </div>
-        <div id="checkmark-icon-correction" class="checkmark-icon icon-container">
-            <img src="https://img.icons8.com/material-outlined/40/000000/checked.png"/>
-            <p>Correction Completed</p>
-        </div>
-        <div id="error-message-correction" class="error-message"></div>
-        <div id="stats-card" class="stats-card">
-            <h5 class="text-primary">Correction Statistics</h5>
-            <p>Word Count: <span id="word-count">0</span></p>
-            <p>Correct Words: <span id="correct-words">0</span></p>
-            <p>Error & Predicted Words: <span id="error-predicted-words">0</span></p>
-            <p>Improvement Measures: <span id="improvement-measures">0%</span></p>
-        </div>
-        <div id="output-highlighted" class="output mt-4">
-            <div class="output-navbar">
-                <span>Highlighted</span>
-                <div>
-                    <button onclick="toggleOutput('highlighted')" class="btn btn-sm btn-light">
-                        <span class="navbar-toggle" id="toggle-highlighted"><img src="https://img.icons8.com/material-outlined/20/000000/expand-arrow.png"/></span>
-                    </button>
-                    <button onclick="copyToClipboard('output-highlighted')" class="btn btn-sm btn-light">
-                        <span class="navbar-feedback" id="feedback-highlighted"><img src="https://img.icons8.com/material-outlined/20/000000/copy.png"/></span>
-                    </button>
-                </div>
-            </div>
-            <div class="output-content" id="output-highlighted-content"></div>
-        </div>
-        <div id="output-masked" class="output mt-4">
-            <div class="output-navbar">
-                <span>Masked</span>
-                <div>
-                    <button onclick="toggleOutput('masked')" class="btn btn-sm btn-light">
-                        <span class="navbar-toggle" id="toggle-masked"><img src="https://img.icons8.com/material-outlined/20/000000/expand-arrow.png"/></span>
-                    </button>
-                    <button onclick="copyToClipboard('output-masked')" class="btn btn-sm btn-light">
-                        <span class="navbar-feedback" id="feedback-masked"><img src="https://img.icons8.com/material-outlined/20/000000/copy.png"/></span>
-                    </button>
-                </div>
-            </div>
-            <div class="output-content" id="output-masked-content"></div>
-        </div>
-        <div id="output-corrected" class="output mt-4">
-            <div class="output-navbar">
-                <span>Corrected</span>
-                <div>
-                    <button onclick="toggleOutput('corrected')" class="btn btn-sm btn-light">
-                        <span class="navbar-toggle" id="toggle-corrected"><img src="https://img.icons8.com/material-outlined/20/000000/expand-arrow.png"/></span>
-                    </button>
-                    <button onclick="copyToClipboard('output-corrected')" class="btn btn-sm btn-light">
-                        <span class="navbar-feedback" id="feedback-corrected"><img src="https://img.icons8.com/material-outlined/20/000000/copy.png"/></span>
-                    </button>
-                </div>
-            </div>
-            <div class="output-content" id="output-corrected-content"></div>
-        </div>
+  <div class="container">
+    <!-- Title -->
+    <div class="text-center mb-5">
+      <h1 class="h3 fw-bold text-gray-800">IndoBERT Text Correction</h1>
+      <p class="text-muted">AI-powered Indonesian text proofreading</p>
     </div>
-    <script>
-        function adjustTextareaHeight() {
-            var textarea = document.getElementById('input');
-            textarea.style.height = 'auto'; // Reset the height
-            textarea.style.height = (textarea.scrollHeight > 400 ? 400 : textarea.scrollHeight) + 'px'; // Adjust the height and limit to 20 lines (400px)
-            textarea.style.overflowY = (textarea.scrollHeight > 400) ? 'scroll' : 'hidden'; // Toggle overflow based on content
+
+    <!-- Main card with input section -->
+    <div class="main-card">
+      <div class="input-section">
+        <!-- File upload -->
+        <div class="mb-3 d-flex align-items-center">
+          <label for="file-upload" class="upload-label me-3" style="cursor: pointer;">
+            <i class="fas fa-upload"></i>
+            <span>Upload Text File</span>
+          </label>
+          <!-- Hidden file input with ID -->
+          <input
+            id="file-upload"
+            type="file"
+            hidden
+            accept=".txt,.json"
+            onchange="handleFileUpload(event)"
+          />
+          <!-- Show file name after upload -->
+          <span id="file-name" class="text-muted ms-2"></span>
+        </div>
+
+        <!-- Textarea with ID="input" -->
+        <textarea
+          id="input"
+          placeholder="Enter text to correct..."
+          class="form-control mb-3"
+          rows="5"
+          oninput="checkInput()"
+        ></textarea>
+
+        <!-- "Analyze/Correct" button with ID -->
+        <button
+          id="correct-button"
+          class="btn btn-primary w-100"
+          onclick="sendData()"
+          disabled
+        >
+          <span class="me-2">Correct Text</span>
+          <i class="fas fa-magic"></i>
+        </button>
+
+        <!-- Loading and checkmark icons -->
+        <div id="loading-icon-correction" class="icon-container">
+          <div class="loading-spinner mx-auto"></div>
+          <p class="text-muted">Correcting...</p>
+        </div>
+        <div id="checkmark-icon-correction" class="icon-container">
+          <img src="https://img.icons8.com/material-outlined/40/000000/checked.png" alt="Completed"/>
+          <p class="text-success fw-bold">Correction Completed</p>
+        </div>
+
+        <!-- Error message container -->
+        <div id="error-message-correction" class="text-error"></div>
+      </div>
+    </div>
+
+    <!-- Stats section -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="text-muted small mb-1">Word Count</div>
+        <div id="word-count" class="h5 mb-0">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="text-muted small mb-1">Correct Words</div>
+        <div id="correct-words" class="h5 mb-0">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="text-muted small mb-1">Errors Predicted</div>
+        <div id="error-predicted-words" class="h5 mb-0 text-error">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="text-muted small mb-1">Improvement %</div>
+        <div id="improvement-measures" class="h5 mb-0 text-success">0%</div>
+      </div>
+    </div>
+
+    <!-- Highlighted output -->
+    <div class="output-card" id="output-highlighted">
+      <div class="output-header">
+        <span class="text-muted fw-medium">Highlighted Errors</span>
+        <div class="btn-group">
+          <button
+            class="btn btn-sm btn-light"
+            onclick="copyToClipboard('output-highlighted')"
+          >
+            <i id="feedback-highlighted" class="fas fa-copy"></i>
+          </button>
+          <button
+            class="btn btn-sm btn-light"
+            onclick="toggleOutput('highlighted')"
+          >
+            <i id="toggle-highlighted" class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+      </div>
+      <div class="output-content" id="output-highlighted-content"></div>
+    </div>
+
+    <!-- Masked output -->
+    <div class="output-card" id="output-masked">
+      <div class="output-header">
+        <span class="text-muted fw-medium">Masked Output</span>
+        <div class="btn-group">
+          <button
+            class="btn btn-sm btn-light"
+            onclick="copyToClipboard('output-masked')"
+          >
+            <i id="feedback-masked" class="fas fa-copy"></i>
+          </button>
+          <button
+            class="btn btn-sm btn-light"
+            onclick="toggleOutput('masked')"
+          >
+            <i id="toggle-masked" class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+      </div>
+      <div class="output-content" id="output-masked-content"></div>
+    </div>
+
+    <!-- Corrected output -->
+    <div class="output-card" id="output-corrected">
+      <div class="output-header">
+        <span class="text-muted fw-medium">Corrected Text</span>
+        <div class="btn-group">
+          <button
+            class="btn btn-sm btn-light"
+            onclick="copyToClipboard('output-corrected')"
+          >
+            <i id="feedback-corrected" class="fas fa-copy"></i>
+          </button>
+          <button
+            class="btn btn-sm btn-light"
+            onclick="toggleOutput('corrected')"
+          >
+            <i id="toggle-corrected" class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+      </div>
+      <div class="output-content" id="output-corrected-content"></div>
+    </div>
+  </div>
+
+  <!-- jQuery (needed for $.ajax and $(...) usage) -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <!-- Bootstrap 5 Bundle (includes Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Enable/disable button based on textarea value
+    function checkInput() {
+      var textarea = document.getElementById('input');
+      var correctButton = document.getElementById('correct-button');
+      correctButton.disabled = !textarea.value.trim();
+    }
+
+    // Main AJAX function
+    function sendData() {
+      var value = document.getElementById('input').value.trim();
+      if (!value) {
+        alert('Please enter text to correct.');
+        return;
+      }
+      // Show loading icon, hide checkmark & errors
+      document.getElementById('loading-icon-correction').style.display = 'block';
+      document.getElementById('checkmark-icon-correction').style.display = 'none';
+      document.getElementById('error-message-correction').style.display = 'none';
+      document.getElementById('error-message-correction').innerText = '';
+
+      $.ajax({
+        url: '/text-correction',
+        type: 'POST',
+        data: { data: value },
+        success: function(response) {
+          // The response should have { highlighted, masked, corrected } strings
+          var highlighted = response.highlighted || '';
+          var masked = response.masked || '';
+          var corrected = response.corrected || value;
+
+          // Insert output
+          document.getElementById('output-highlighted-content').innerHTML = highlighted;
+          document.getElementById('output-masked-content').innerHTML = masked;
+          document.getElementById('output-corrected-content').innerHTML = corrected;
+
+          // Check for errors / mask presence
+          var hasError = highlighted.includes('class="spanred"');
+          var hasMasked = masked.includes('[MASK]');
+          var isCorrected = (corrected !== value);
+
+          // Box-level backgrounds
+          if (hasError) {
+            document.getElementById('output-highlighted').classList.add('highlight-error');
+          } else {
+            document.getElementById('output-highlighted').classList.add('correct-error');
+          }
+
+          if (hasMasked) {
+            document.getElementById('output-masked').classList.add('mask-error');
+            // Add heavier highlight to [MASK] placeholders
+            document.getElementById('output-masked-content').innerHTML =
+              masked.replace(/\[MASK\]/g, '<span class="mask-highlight">[MASK]</span>');
+          } else {
+            document.getElementById('output-masked').classList.add('correct-error');
+          }
+
+          if (isCorrected) {
+            document.getElementById('output-corrected').classList.add('correct-error');
+            // Convert <span class="spanred"> to a green highlight
+            document.getElementById('output-corrected-content').innerHTML =
+              corrected.replace(
+                /<span class="spanred">(.*?)<\/span>/g,
+                '<span class="correct-highlight">$1</span>'
+              );
+          } else {
+            document.getElementById('output-corrected').classList.add('correct-error');
+          }
+
+          // Update statistics
+          updateStatistics(value, highlighted, corrected);
+
+          // Hide loading, show checkmark
+          document.getElementById('loading-icon-correction').style.display = 'none';
+          document.getElementById('checkmark-icon-correction').style.display = 'block';
+        },
+        error: function(error) {
+          console.error(error);
+          document.getElementById('loading-icon-correction').style.display = 'none';
+          document.getElementById('error-message-correction').style.display = 'block';
+          document.getElementById('error-message-correction').innerText =
+            'Error during correction process. Please try again.';
         }
+      });
+    }
 
-        function checkInput() {
-            var textarea = document.getElementById('input');
-            var correctButton = document.getElementById('correct-button');
-            if (textarea.value.trim()) {
-                correctButton.disabled = false;
-            } else {
-                correctButton.disabled = true;
-            }
-        }
+    // File upload handling
+    function handleFileUpload(event) {
+      var input = event.target;
+      if (input.files && input.files[0]) {
+        resetOutputsAndStats();
+        var file = input.files[0];
+        document.getElementById('file-name').innerText = file.name;
+        // Enable correct-button
+        document.getElementById('correct-button').disabled = false;
 
-        function copyToClipboard(containerId) {
-            var copyText = document.getElementById(containerId + '-content').innerText;
-            var textarea = document.createElement('textarea');
-            textarea.value = copyText;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('input').value = e.target.result;
+          checkInput(); // re-check
+        };
+        reader.readAsText(file);
+      }
+    }
 
-            var feedback = document.getElementById('feedback-' + containerId.split('-')[1]);
-            feedback.innerHTML = '<img src="https://img.icons8.com/material-outlined/20/000000/checked.png"/> Copied!';
-            setTimeout(function() {
-                feedback.innerHTML = '<img src="https://img.icons8.com/material-outlined/20/000000/copy.png"/>';
-            }, 2000);
-        }
+    // Reset everything
+    function resetOutputsAndStats() {
+      // Clear text outputs
+      document.getElementById('output-highlighted-content').innerHTML = '';
+      document.getElementById('output-masked-content').innerHTML = '';
+      document.getElementById('output-corrected-content').innerHTML = '';
 
-        function toggleOutput(outputId) {
-            var content = document.getElementById('output-' + outputId + '-content');
-            var toggle = document.getElementById('toggle-' + outputId);
-            if (content.style.display === 'none') {
-                content.style.display = 'block';
-                toggle.innerHTML = '<img src="https://img.icons8.com/material-outlined/20/000000/expand-arrow.png"/>';
-            } else {
-                content.style.display = 'none';
-                toggle.innerHTML = '<img src="https://img.icons8.com/material-outlined/20/000000/collapse-arrow.png"/>';
-            }
-        }
+      // Remove highlight classes from the container
+      document.getElementById('output-highlighted').className = 'output-card';
+      document.getElementById('output-masked').className = 'output-card';
+      document.getElementById('output-corrected').className = 'output-card';
 
-        function sendData() {
-            var value = document.getElementById('input').value;
-            if (!value.trim()) {
-                alert('Please enter text to correct.');
-                return;
-            }
-            document.getElementById('loading-icon-correction').style.display = 'block';
-            document.getElementById('checkmark-icon-correction').style.display = 'none';
-            document.getElementById('error-message-correction').innerText = ''; // Clear previous error message
-            $.ajax({
-                url: '/text-correction',
-                type: 'POST',
-                data: { 'data': value },
-                success: function(response) {
-                    var highlighted = response.highlighted;
-                    var masked = response.masked;
-                    var corrected = response.corrected;
+      // Clear stats
+      document.getElementById('word-count').innerText = '0';
+      document.getElementById('correct-words').innerText = '0';
+      document.getElementById('error-predicted-words').innerText = '0';
+      document.getElementById('improvement-measures').innerText = '0%';
 
-                    // Check for errors
-                    var hasError = highlighted.includes('class="spanred"');
-                    var hasMasked = masked.includes('[MASK]');
-                    var isCorrected = corrected !== value;
+      // Hide icons/errors
+      document.getElementById('loading-icon-correction').style.display = 'none';
+      document.getElementById('checkmark-icon-correction').style.display = 'none';
+      document.getElementById('error-message-correction').style.display = 'none';
+      document.getElementById('error-message-correction').innerText = '';
 
-                    // Update themes based on errors
-                    document.getElementById('output-highlighted-content').innerHTML = highlighted;
-                    document.getElementById('output-masked-content').innerHTML = masked;
-                    document.getElementById('output-corrected-content').innerHTML = corrected;
+      // Clear textarea & file name
+      document.getElementById('input').value = '';
+      document.getElementById('file-name').innerText = '';
+      // Disable correct-button
+      document.getElementById('correct-button').disabled = true;
+    }
 
-                    if (hasError) {
-                        document.getElementById('output-highlighted').className = 'output highlight-error';
-                    } else {
-                        document.getElementById('output-highlighted').className = 'output correct-error';
-                    }
+    // Calculate stats
+    function updateStatistics(originalText, highlightedText, correctedText) {
+      var words = originalText.trim().split(/\s+/);
+      var wordCount = words.length;
 
-                    if (hasMasked) {
-                        document.getElementById('output-masked').className = 'output mask-error';
-                        document.getElementById('output-masked-content').innerHTML = masked.replace(/\[MASK\]/g, '<span class="mask-highlight">[MASK]</span>');
-                    } else {
-                        document.getElementById('output-masked').className = 'output correct-error';
-                    }
+      // Count how many times <span class="spanred"> occurs
+      var errorMatches = (highlightedText.match(/<span class="spanred">/g) || []).length;
+      var errorPredictedWords = errorMatches;
+      var correctWords = wordCount - errorPredictedWords;
+      // Example measure: % of words flagged as errors
+      var improvementMeasures = ((errorPredictedWords / wordCount) * 100).toFixed(2);
 
-                    if (isCorrected) {
-                        document.getElementById('output-corrected').className = 'output correct-error';
-                        document.getElementById('output-corrected-content').innerHTML = corrected.replace(/<span class="spanred">(.*?)<\/span>/g, '<span class="correct-highlight">$1</span>');
-                    } else {
-                        document.getElementById('output-corrected').className = 'output correct-error';
-                    }
+      document.getElementById('word-count').innerText = wordCount;
+      document.getElementById('correct-words').innerText = correctWords;
+      document.getElementById('error-predicted-words').innerText = errorPredictedWords;
+      document.getElementById('improvement-measures').innerText = improvementMeasures + '%';
+    }
 
-                    // Update statistics
-                    updateStatistics(value, highlighted, corrected);
+    // Copy to clipboard
+    function copyToClipboard(containerId) {
+      var copyText = document.getElementById(containerId + '-content').innerText;
+      var textarea = document.createElement('textarea');
+      textarea.value = copyText;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
 
-                    // Hide loading icon and show checkmark icon
-                    document.getElementById('loading-icon-correction').style.display = 'none';
-                    document.getElementById('checkmark-icon-correction').style.display = 'block';
-                },
-                error: function(error) {
-                    console.log(error);
-                    document.getElementById('loading-icon-correction').style.display = 'none';
-                    document.getElementById('error-message-correction').innerText = 'Error during correction process. Please try again.';
-                }
-            });
-        }
+      // Show feedback icon for 2s
+      var feedbackId = 'feedback-' + containerId.split('-')[1];
+      var feedbackEl = document.getElementById(feedbackId);
+      feedbackEl.classList.remove('fa-copy');
+      feedbackEl.classList.add('fa-check');
+      setTimeout(function() {
+        feedbackEl.classList.remove('fa-check');
+        feedbackEl.classList.add('fa-copy');
+      }, 2000);
+    }
 
-        function handleFileUpload(event) {
-            var input = event.target;
-            if (input.files && input.files[0]) {
-                resetOutputsAndStats(); // Reset everything when a new file is uploaded
-                var file = input.files[0];
-                document.getElementById('file-name').innerText = file.name;
-                document.getElementById('correct-button').disabled = false; // Enable correct button
-                // Read the file content
-                var reader = new FileReader();
-                reader.onload = function(event) {
-                    document.getElementById('input').value = event.target.result;
-                    adjustTextareaHeight(); // Adjust height after setting the text
-                    checkInput(); // Enable button if there's text
-                };
-                reader.readAsText(file);
-            }
-        }
+    // Show/hide an output content box
+    function toggleOutput(outputId) {
+      var content = document.getElementById('output-' + outputId + '-content');
+      var toggle = document.getElementById('toggle-' + outputId);
+      if (!content || !toggle) return;
 
-        function resetOutputsAndStats() {
-            document.getElementById('output-highlighted-content').innerHTML = '';
-            document.getElementById('output-masked-content').innerHTML = '';
-            document.getElementById('output-corrected-content').innerHTML = '';
+      if (content.style.display === 'none') {
+        content.style.display = 'block';
+        toggle.classList.remove('fa-chevron-up');
+        toggle.classList.add('fa-chevron-down');
+      } else {
+        content.style.display = 'none';
+        toggle.classList.remove('fa-chevron-down');
+        toggle.classList.add('fa-chevron-up');
+      }
+    }
 
-            document.getElementById('word-count').innerText = '0';
-            document.getElementById('correct-words').innerText = '0';
-            document.getElementById('error-predicted-words').innerText = '0';
-            document.getElementById('improvement-measures').innerText = '0%';
-
-            document.getElementById('output-highlighted').className = 'output';
-            document.getElementById('output-masked').className = 'output';
-            document.getElementById('output-corrected').className = 'output';
-
-            document.getElementById('loading-icon-correction').style.display = 'none';
-            document.getElementById('checkmark-icon-correction').style.display = 'none';
-
-            document.getElementById('correct-button').disabled = true;
-
-            document.getElementById('input').value = '';
-            adjustTextareaHeight(); // Reset textarea height
-
-            // Clear error messages
-            document.getElementById('error-message-correction').innerText = '';
-        }
-
-        function updateStatistics(originalText, highlightedText, correctedText) {
-            var wordCount = originalText.split(/\s+/).length;
-            var correctWords = wordCount - (highlightedText.match(/<span class="spanred">/g) || []).length;
-            var errorPredictedWords = (highlightedText.match(/<span class="spanred">/g) || []).length;
-            var improvementMeasures = ((errorPredictedWords / wordCount) * 100).toFixed(2);
-
-            document.getElementById('word-count').innerText = wordCount;
-            document.getElementById('correct-words').innerText = correctWords;
-            document.getElementById('error-predicted-words').innerText = errorPredictedWords;
-            document.getElementById('improvement-measures').innerText = improvementMeasures + '%';
-        }
-
-        // Synchronize scrolling
-        $(function() {
-            $('.output-content').on('scroll', function() {
-                $('.output-content').scrollTop($(this).scrollTop());
-            });
-        });
-    </script>
+    // Optional: keep .output-content divs in sync if you want them to scroll together
+    $(function() {
+      $('.output-content').on('scroll', function() {
+        const scrollTop = $(this).scrollTop();
+        $('.output-content').scrollTop(scrollTop);
+      });
+    });
+  </script>
 </body>
 </html>
