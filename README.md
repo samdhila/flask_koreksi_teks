@@ -72,23 +72,6 @@ Install requirements
   pip install -r requirements.txt
 ```
 
-Install SpaCy model
-```bash
-  python -m spacy download en_core_web_sm
-```
-
-Pilih sumber **download** model **IndoBERT** yang ingin digunakan pada **app.py**\
-(berasal dari **HuggingFace (default)** atau **lokal**)
-```bash
-  # option 1 HuggingFace repository model
-  model_path = 'indolem/indobert-base-uncased'
-```
-Link download **IndoBERT** lokal: [Google Drive](https://drive.google.com)
-```bash
-  # option 2 local repository model
-  model_path = './saved_model'
-```
-
 Jalankan aplikasi web Flask
 ```bash
   python app.py
