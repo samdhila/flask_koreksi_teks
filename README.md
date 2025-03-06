@@ -33,7 +33,7 @@
 
 ## Live Demo
 Untuk demo percobaan aplikasi **Flask Sistem Koreksi Teks**, bisa dilakukan pada
-[URL Live Demo](https://correction-samreact.zeabur.app/) ini.
+[URL Live Demo](https://correction-samreact.zeabur.app/) ini. (Available pada jam 06:00 sampai 21:00 WIB)
 
 Berikut ilustrasi penggunaan aplikasi:
 ![Demo Koreksi Teks GIF](https://github.com/samdhila/media/blob/main/flask/flask-optimized.gif)
