@@ -32,10 +32,11 @@
 - **Output Text**: Sistem akan menampilkan output versi teks yang sudah dikoreksi.
 
 ## Live Demo
-Untuk demo percobaan aplikasi **Flask Sistem Koreksi Teks**, untuk saat ini belum bisa dilakukan.
+Untuk demo percobaan aplikasi **Flask Sistem Koreksi Teks**, bisa dilakukan pada
+[URL Live Demo](https://correction-samreact.zeabur.app/) ini.
 
 Berikut ilustrasi penggunaan aplikasi:
-![Demo Koreksi Teks GIF](https://github.com/samdhila/media/blob/main/bert/bert-optimized.gif)
+![Demo Koreksi Teks GIF](https://github.com/samdhila/media/blob/main/flask/flask-optimized.gif)
 
 ## Setup Project
 
