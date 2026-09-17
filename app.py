@@ -161,4 +161,4 @@ if __name__ == '__main__':
         print(f"Error loading model: {e}")
         exit(1)
 
-    app.run(port=5000, debug=True)
+    app.run(port=8080, debug=True)
